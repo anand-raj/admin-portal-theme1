@@ -85,6 +85,17 @@ export async function updateBook(token, id, book) {
   return handleResponse(res);
 }
 
+export async function uploadBookImage(token, bookId, file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(`${BOOKS_WORKER_URL}/admin/books/${bookId}/image`, {
+    method: 'POST',
+    headers: { 'Authorization': `token ${token}` },
+    body: formData,
+  });
+  return handleResponse(res);
+}
+
 // ── Orders ─────────────────────────────────────────────────────────────────
 export async function getOrders(token) {
   const res = await fetch(`${BOOKS_WORKER_URL}/admin/orders`, { headers: authHeaders(token) });

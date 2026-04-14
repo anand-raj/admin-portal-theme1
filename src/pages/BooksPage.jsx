@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../lib/auth';
-import { getBooks, createBook, updateBook } from '../lib/api';
+import { getBooks, createBook, updateBook, uploadBookImage } from '../lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,9 @@ export default function BooksPage() {
   const [editing, setEditing] = useState(null); // null = new, else book object
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const load = useCallback(async () => {
     try {
@@ -35,17 +38,28 @@ export default function BooksPage() {
   function openNew() {
     setEditing(null);
     setForm(EMPTY);
+    setImageFile(null);
+    setImagePreview(null);
     setOpen(true);
   }
 
   function openEdit(book) {
     setEditing(book);
     setForm({ title: book.title, author: book.author ?? '', price: book.price, description: book.description ?? '', stock: book.stock ?? '' });
+    setImageFile(null);
+    setImagePreview(book.image_url ?? null);
     setOpen(true);
   }
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  }
+
+  function handleImageChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   }
 
   async function handleSave() {
@@ -58,9 +72,11 @@ export default function BooksPage() {
       const payload = { ...form, price: Number(form.price), stock: form.stock !== '' ? Number(form.stock) : undefined };
       if (editing) {
         await updateBook(token, editing.id, payload);
+        if (imageFile) await uploadBookImage(token, editing.id, imageFile);
         toast.success('Book updated.');
       } else {
-        await createBook(token, payload);
+        const { id } = await createBook(token, payload);
+        if (imageFile) await uploadBookImage(token, id, imageFile);
         toast.success('Book added.');
       }
       setOpen(false);
@@ -86,6 +102,7 @@ export default function BooksPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Cover</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Author</TableHead>
               <TableHead>Price (₹)</TableHead>
@@ -95,13 +112,19 @@ export default function BooksPage() {
           </TableHeader>
           <TableBody>
             {loading && (
-              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
             )}
             {!loading && !books.length && (
-              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">No books yet.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No books yet.</TableCell></TableRow>
             )}
             {books.map(b => (
               <TableRow key={b.id}>
+                <TableCell>
+                  {b.image_url
+                    ? <img src={b.image_url} alt={b.title} className="h-12 w-10 object-cover rounded" />
+                    : <div className="h-12 w-10 rounded bg-muted flex items-center justify-center text-muted-foreground text-xs">—</div>
+                  }
+                </TableCell>
                 <TableCell className="font-medium">{b.title}</TableCell>
                 <TableCell className="text-muted-foreground">{b.author ?? '—'}</TableCell>
                 <TableCell>₹{b.price}</TableCell>
@@ -133,6 +156,23 @@ export default function BooksPage() {
                 <Input id={name} name={name} type={type} value={form[name]} onChange={handleChange} />
               </div>
             ))}
+            <div className="space-y-1">
+              <Label>Cover Image</Label>
+              {imagePreview && (
+                <img src={imagePreview} alt="Cover preview" className="h-24 w-20 object-cover rounded border mb-1" />
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                {imagePreview ? 'Change image' : 'Upload image'}
+              </Button>
+              <p className="text-xs text-muted-foreground">JPEG, PNG, WebP or GIF — max 2 MB</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
