@@ -45,7 +45,13 @@ export default function BooksPage() {
 
   function openEdit(book) {
     setEditing(book);
-    setForm({ title: book.title, author: book.author ?? '', price: book.price, description: book.description ?? '', stock: book.stock ?? '' });
+    setForm({
+      title:       book.title,
+      author:      book.author ?? '',
+      price:       book.price_paise != null ? book.price_paise / 100 : '',
+      description: book.description ?? '',
+      stock:       book.in_stock ?? '',
+    });
     setImageFile(null);
     setImagePreview(book.image_url ?? null);
     setOpen(true);
@@ -127,8 +133,8 @@ export default function BooksPage() {
                 </TableCell>
                 <TableCell className="font-medium">{b.title}</TableCell>
                 <TableCell className="text-muted-foreground">{b.author ?? '—'}</TableCell>
-                <TableCell>₹{b.price}</TableCell>
-                <TableCell>{b.stock ?? '—'}</TableCell>
+                <TableCell>₹{b.price_paise != null ? (b.price_paise / 100).toLocaleString('en-IN') : '—'}</TableCell>
+                <TableCell>{b.in_stock ? 'In Stock' : 'Out of Stock'}</TableCell>
                 <TableCell>
                   <Button size="sm" variant="outline" onClick={() => openEdit(b)}>Edit</Button>
                 </TableCell>
