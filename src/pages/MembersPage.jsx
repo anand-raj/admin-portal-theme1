@@ -72,21 +72,22 @@ export default function MembersPage() {
 
   const uniqueStates = [...new Set(members.map(m => m.state).filter(Boolean))].sort();
 
-  const filtered = members
+  const stateMembers = stateFilter ? members.filter(m => m.state === stateFilter) : members;
+
+  const filtered = stateMembers
     .filter(m => {
       if (filter === 'expired') return isExpired(m.expires_at);
       if (filter !== 'all') return m.status === filter;
       return true;
     })
-    .filter(m => !stateFilter || m.state === stateFilter)
     .filter(m => !search || m.name.toLowerCase().includes(search) || m.email.toLowerCase().includes(search));
 
   const counts = {
-    total: members.length,
-    pending: members.filter(m => m.status === 'pending').length,
-    approved: members.filter(m => m.status === 'approved').length,
-    rejected: members.filter(m => m.status === 'rejected').length,
-    expired: members.filter(m => isExpired(m.expires_at)).length,
+    total:    stateMembers.length,
+    pending:  stateMembers.filter(m => m.status === 'pending').length,
+    approved: stateMembers.filter(m => m.status === 'approved').length,
+    rejected: stateMembers.filter(m => m.status === 'rejected').length,
+    expired:  stateMembers.filter(m => isExpired(m.expires_at)).length,
   };
 
   const STAT_CARDS = [
