@@ -24,7 +24,7 @@ export default function AdminsPage() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ github_login: '', role: 'moderator' });
+  const [form, setForm] = useState({ github_login: '', role: 'moderator', section: '' });
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState({});
 
@@ -43,12 +43,15 @@ export default function AdminsPage() {
 
   async function handleAdd() {
     if (!form.github_login.trim()) { toast.error('GitHub login is required.'); return; }
+    if (form.role === 'section_editor' && !form.section.trim()) {
+      toast.error('State/section is required for section editor role.'); return;
+    }
     setSaving(true);
     try {
       await addAdmin(token, form);
       toast.success(`${form.github_login} added as ${form.role}.`);
       setOpen(false);
-      setForm({ github_login: '', role: 'moderator' });
+      setForm({ github_login: '', role: 'moderator', section: '' });
       await load();
     } catch (e) {
       toast.error(e.message);
@@ -87,16 +90,17 @@ export default function AdminsPage() {
             <TableRow>
               <TableHead>GitHub Login</TableHead>
               <TableHead>Role</TableHead>
+              <TableHead>Section</TableHead>
               <TableHead>Added</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading && (
-              <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
             )}
             {!loading && !admins.length && (
-              <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">No admins found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">No admins found.</TableCell></TableRow>
             )}
             {admins.map(a => (
               <TableRow key={a.id}>
@@ -107,7 +111,8 @@ export default function AdminsPage() {
                   </a>
                   {a.github_login === user?.login && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}
                 </TableCell>
-                <TableCell><Badge variant={roleBadgeVariant(a.role)} className="capitalize">{a.role}</Badge></TableCell>
+                <TableCell><Badge variant={roleBadgeVariant(a.role)} className="capitalize">{a.role.replace('_', ' ')}</Badge></TableCell>
+                <TableCell className="text-sm text-muted-foreground">{a.section || '—'}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">{fmtDate(a.added_at)}</TableCell>
                 <TableCell>
                   <Button size="sm" variant="outline" disabled={busy[a.id] || a.github_login === user?.login}
@@ -134,14 +139,24 @@ export default function AdminsPage() {
             </div>
             <div className="space-y-1">
               <Label>Role</Label>
-              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v }))}>
+              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v, section: '' }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="moderator">Moderator</SelectItem>
+                  <SelectItem value="section_editor">Section Editor</SelectItem>
                   <SelectItem value="owner">Owner</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {form.role === 'section_editor' && (
+              <div className="space-y-1">
+                <Label htmlFor="section">State / Section</Label>
+                <Input id="section" placeholder="e.g. Karnataka"
+                  value={form.section}
+                  onChange={e => setForm(f => ({ ...f, section: e.target.value }))} />
+                <p className="text-xs text-muted-foreground">This user will only see and manage members from this state.</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>

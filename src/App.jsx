@@ -9,6 +9,13 @@ import NewsletterPage from './pages/NewsletterPage';
 import AdminsPage from './pages/AdminsPage';
 import EventRegistrationsPage from './pages/EventRegistrationsPage';
 
+// Guard: redirects to /members if the current user's role is not in `allowed`
+function RequireRole({ allowed, children }) {
+  const { user } = useAuth();
+  if (!allowed.includes(user?.role)) return <Navigate to="/members" replace />;
+  return children;
+}
+
 function AppRoutes() {
   const { isAuthed } = useAuth();
   if (!isAuthed) return <LoginPage />;
@@ -18,11 +25,11 @@ function AppRoutes() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/members" replace />} />
           <Route path="members"     element={<MembersPage />} />
-          <Route path="orders"      element={<OrdersPage />} />
-          <Route path="books"       element={<BooksPage />} />
-          <Route path="newsletter"  element={<NewsletterPage />} />
-          <Route path="admins"      element={<AdminsPage />} />
-          <Route path="event-registrations" element={<EventRegistrationsPage />} />
+          <Route path="orders"      element={<RequireRole allowed={['owner', 'moderator']}><OrdersPage /></RequireRole>} />
+          <Route path="books"       element={<RequireRole allowed={['owner', 'moderator']}><BooksPage /></RequireRole>} />
+          <Route path="newsletter"  element={<RequireRole allowed={['owner', 'moderator']}><NewsletterPage /></RequireRole>} />
+          <Route path="admins"      element={<RequireRole allowed={['owner']}><AdminsPage /></RequireRole>} />
+          <Route path="event-registrations" element={<RequireRole allowed={['owner', 'moderator']}><EventRegistrationsPage /></RequireRole>} />
           <Route path="*"           element={<Navigate to="/members" replace />} />
         </Route>
       </Routes>

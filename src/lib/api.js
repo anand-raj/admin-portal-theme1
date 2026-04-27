@@ -108,11 +108,11 @@ export async function getAdmins(token) {
   return handleResponse(res);
 }
 
-export async function addAdmin(token, { github_login, role }) {
+export async function addAdmin(token, { github_login, role, section }) {
   const res = await fetch(`${WORKER_URL}/admin/admins`, {
     method: 'POST',
     headers: authHeaders(token),
-    body: JSON.stringify({ github_login, role }),
+    body: JSON.stringify({ github_login, role, section: section || null }),
   });
   return handleResponse(res);
 }

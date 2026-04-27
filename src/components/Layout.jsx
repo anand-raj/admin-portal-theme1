@@ -9,16 +9,19 @@ import {
 } from 'lucide-react';
 
 const NAV = [
-  { to: '/members',              label: 'Members',       icon: Users },
-  { to: '/orders',               label: 'Orders',        icon: ShoppingCart },
-  { to: '/books',                label: 'Books',         icon: BookOpen },
-  { to: '/newsletter',           label: 'Newsletter',    icon: Mail },
-  { to: '/event-registrations',  label: 'Registrations', icon: CalendarCheck },
-  { to: '/admins',               label: 'Admins',        icon: Shield },
+  { to: '/members',              label: 'Members',       icon: Users,          roles: ['owner', 'moderator', 'section_editor'] },
+  { to: '/orders',               label: 'Orders',        icon: ShoppingCart,   roles: ['owner', 'moderator'] },
+  { to: '/books',                label: 'Books',         icon: BookOpen,       roles: ['owner', 'moderator'] },
+  { to: '/newsletter',           label: 'Newsletter',    icon: Mail,           roles: ['owner', 'moderator'] },
+  { to: '/event-registrations',  label: 'Registrations', icon: CalendarCheck,  roles: ['owner', 'moderator'] },
+  { to: '/admins',               label: 'Admins',        icon: Shield,         roles: ['owner'] },
 ];
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const role = user?.role || 'moderator';
+
+  const visibleNav = NAV.filter(({ roles }) => roles.includes(role));
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -30,7 +33,7 @@ export default function Layout() {
         </div>
         <Separator />
         <nav className="flex-1 p-2 space-y-0.5">
-          {NAV.map(({ to, label, icon: Icon }) => (
+          {visibleNav.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -48,15 +51,22 @@ export default function Layout() {
           ))}
         </nav>
         <Separator />
-        <div className="p-3 flex items-center gap-2">
-          <Avatar className="h-7 w-7">
-            <AvatarImage src={user?.avatar} alt={user?.login} />
-            <AvatarFallback>{user?.login?.[0]?.toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <span className="text-xs text-gray-600 flex-1 truncate">{user?.login}</span>
-          <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={logout}>
-            Sign out
-          </Button>
+        <div className="p-3 space-y-1">
+          {user?.section && (
+            <p className="text-xs text-muted-foreground px-1">
+              Section: <span className="font-medium text-gray-700">{user.section}</span>
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <Avatar className="h-7 w-7">
+              <AvatarImage src={user?.avatar} alt={user?.login} />
+              <AvatarFallback>{user?.login?.[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <span className="text-xs text-gray-600 flex-1 truncate">{user?.login}</span>
+            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={logout}>
+              Sign out
+            </Button>
+          </div>
         </div>
       </aside>
 

@@ -73,6 +73,7 @@ export default function LoginPage() {
 
   async function verifyAndLogin(ghToken) {
     try {
+      // Verify the token belongs to an admin
       const res = await fetch(`${WORKER_URL}/admin/members`, {
         headers: { Authorization: `token ${ghToken}` },
       });
@@ -86,12 +87,30 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      // Get the GitHub user info for display
-      const userRes = await fetch('https://api.github.com/user', {
-        headers: { Authorization: `token ${ghToken}`, 'User-Agent': 'admin-portal' },
-      });
+
+      // Fetch GitHub user info and admin list in parallel
+      const [userRes, adminsRes] = await Promise.all([
+        fetch('https://api.github.com/user', {
+          headers: { Authorization: `token ${ghToken}`, 'User-Agent': 'admin-portal' },
+        }),
+        fetch(`${WORKER_URL}/admin/admins`, {
+          headers: { Authorization: `token ${ghToken}` },
+        }),
+      ]);
+
       const userInfo = userRes.ok ? await userRes.json() : {};
-      login(ghToken, { login: userInfo.login, avatar: userInfo.avatar_url });
+      const admins   = adminsRes.ok ? await adminsRes.json() : [];
+
+      const myEntry = Array.isArray(admins)
+        ? admins.find(a => a.github_login.toLowerCase() === (userInfo.login || '').toLowerCase())
+        : null;
+
+      login(ghToken, {
+        login:   userInfo.login,
+        avatar:  userInfo.avatar_url,
+        role:    myEntry?.role    || 'moderator',
+        section: myEntry?.section || null,
+      });
     } catch (e) {
       setError(`Could not reach worker: ${e.message}`);
       setLoading(false);

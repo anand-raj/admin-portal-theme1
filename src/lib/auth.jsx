@@ -4,7 +4,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState('');
-  const [user, setUser] = useState(null); // { login, role }
+  const [user, setUser] = useState(null); // { login, avatar, role, section }
 
   function login(ghToken, userInfo) {
     setToken(ghToken);
