@@ -35,7 +35,8 @@ function FilePreview({ obj }) {
   );
 }
 
-const ALLOWED_TYPES = 'image/jpeg,image/png,image/webp,image/gif,image/avif,image/svg+xml,video/mp4,video/webm,application/pdf';
+// image/svg+xml excluded — SVGs can embed <script> tags and execute JS when opened directly
+const ALLOWED_TYPES = 'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,application/pdf';
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 
 function formatDate(dateVal) {
