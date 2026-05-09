@@ -9,7 +9,6 @@ import NewsletterPage from './pages/NewsletterPage';
 import AdminsPage from './pages/AdminsPage';
 import EventRegistrationsPage from './pages/EventRegistrationsPage';
 import MediaPage from './pages/MediaPage';
-import MediaPage from './pages/MediaPage';
 
 // Guard: redirects to /members if the current user's role is not in `allowed`
 function RequireRole({ allowed, children }) {
