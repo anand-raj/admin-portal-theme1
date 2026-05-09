@@ -36,7 +36,18 @@ function FilePreview({ obj }) {
 }
 
 const ALLOWED_TYPES = 'image/jpeg,image/png,image/webp,image/gif,image/avif,image/svg+xml,video/mp4,video/webm,application/pdf';
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
+
+function formatDate(dateVal) {
+  if (!dateVal) return '';
+  const d = new Date(dateVal);
+  return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function monthLabel(yyyymm) {
+  const [y, m] = yyyymm.split('/');
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-IN', { year: 'numeric', month: 'long' });
+}
 
 export default function MediaPage() {
   const { token, user } = useAuth();
@@ -47,6 +58,7 @@ export default function MediaPage() {
   const [deleteTarget, setDeleteTarget]     = useState(null); // obj to confirm deletion
   const [deleting, setDeleting]     = useState(false);
   const [dragging, setDragging]     = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState('');
   const fileInputRef                = useRef(null);
 
   const canDelete = ['owner', 'moderator'].includes(user?.role);
@@ -67,7 +79,7 @@ export default function MediaPage() {
 
   async function uploadFile(file) {
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`${file.name} exceeds the 50 MB limit.`);
+      toast.error(`${file.name} exceeds the 1 MB limit.`);
       return;
     }
 
@@ -144,6 +156,7 @@ export default function MediaPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Media</h1>
+        {/* intentional blank — filter below */}
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load}>↻ Refresh</Button>
           <Button
@@ -192,19 +205,54 @@ export default function MediaPage() {
         ) : (
           <>
             <p className="text-sm font-medium">Drag & drop files here, or click to browse</p>
-            <p className="text-xs mt-1">Images, videos, PDFs — max 50 MB each</p>
+            <p className="text-xs mt-1">Images, videos, PDFs — max 1 MB each</p>
           </>
         )}
       </div>
+
+      {/* Month filter */}
+      {!loading && media.length > 0 && (() => {
+        const months = [...new Set(media.map(o => o.key.split('/').slice(0, 2).join('/')))].sort().reverse();
+        return months.length > 1 ? (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-muted-foreground">Filter by month:</span>
+            <button
+              onClick={() => setSelectedMonth('')}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                selectedMonth === '' ? 'bg-primary text-primary-foreground border-primary' : 'border-muted-foreground/30 hover:border-muted-foreground/60'
+              }`}
+            >
+              All
+            </button>
+            {months.map(m => (
+              <button
+                key={m}
+                onClick={() => setSelectedMonth(m)}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                  selectedMonth === m ? 'bg-primary text-primary-foreground border-primary' : 'border-muted-foreground/30 hover:border-muted-foreground/60'
+                }`}
+              >
+                {monthLabel(m)}
+              </button>
+            ))}
+          </div>
+        ) : null;
+      })()}
 
       {/* Grid */}
       {loading ? (
         <p className="text-center py-16 text-muted-foreground">Loading…</p>
       ) : !media.length ? (
         <p className="text-center py-16 text-muted-foreground">No files yet. Upload one above.</p>
-      ) : (
+      ) : (() => {
+        const filtered = selectedMonth
+          ? media.filter(o => o.key.startsWith(selectedMonth + '/'))
+          : media;
+        return filtered.length === 0 ? (
+          <p className="text-center py-8 text-muted-foreground">No files for this month.</p>
+        ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {media.map(obj => (
+          {filtered.map(obj => (
             <div
               key={obj.key}
               className="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
@@ -218,6 +266,9 @@ export default function MediaPage() {
                   {obj.key.split('/').pop()}
                 </p>
                 <p className="text-xs text-muted-foreground">{obj.sizeFormatted}</p>
+                {obj.uploaded && (
+                  <p className="text-xs text-muted-foreground/70">{formatDate(obj.uploaded)}</p>
+                )}
                 <div className="flex gap-1 mt-auto">
                   <Button
                     size="sm"
@@ -245,7 +296,8 @@ export default function MediaPage() {
             </div>
           ))}
         </div>
-      )}
+        );
+      })()}
 
       {/* Delete confirmation dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
