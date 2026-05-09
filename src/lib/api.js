@@ -1,4 +1,4 @@
-import { WORKER_URL, BOOKS_WORKER_URL, EVENTS_WORKER_URL } from './config';
+import { WORKER_URL, BOOKS_WORKER_URL, EVENTS_WORKER_URL, MEDIA_WORKER_URL } from './config';
 
 function authHeaders(token) {
   return { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' };
@@ -153,6 +153,29 @@ export async function cancelRegistration(token, id) {
     method: 'POST',
     headers: authHeaders(token),
     body: JSON.stringify({ id }),
+  });
+  return handleResponse(res);
+}
+
+// ── Media ──────────────────────────────────────────────────────────────────
+export async function getMedia(token) {
+  const res = await fetch(`${MEDIA_WORKER_URL}/media`, { headers: authHeaders(token) });
+  return handleResponse(res);
+}
+
+export async function presignUpload(token, filename, contentType) {
+  const res = await fetch(`${MEDIA_WORKER_URL}/media/presign`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify({ filename, contentType }),
+  });
+  return handleResponse(res);
+}
+
+export async function deleteMedia(token, key) {
+  const res = await fetch(`${MEDIA_WORKER_URL}/media/${encodeURIComponent(key)}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
   });
   return handleResponse(res);
 }

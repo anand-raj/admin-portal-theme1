@@ -8,6 +8,8 @@ import BooksPage from './pages/BooksPage';
 import NewsletterPage from './pages/NewsletterPage';
 import AdminsPage from './pages/AdminsPage';
 import EventRegistrationsPage from './pages/EventRegistrationsPage';
+import MediaPage from './pages/MediaPage';
+import MediaPage from './pages/MediaPage';
 
 // Guard: redirects to /members if the current user's role is not in `allowed`
 function RequireRole({ allowed, children }) {
@@ -30,6 +32,7 @@ function AppRoutes() {
           <Route path="newsletter"  element={<RequireRole allowed={['owner', 'moderator']}><NewsletterPage /></RequireRole>} />
           <Route path="admins"      element={<RequireRole allowed={['owner']}><AdminsPage /></RequireRole>} />
           <Route path="event-registrations" element={<RequireRole allowed={['owner', 'moderator']}><EventRegistrationsPage /></RequireRole>} />
+          <Route path="media"        element={<RequireRole allowed={['owner', 'moderator', 'section_editor']}><MediaPage /></RequireRole>} />
           <Route path="*"           element={<Navigate to="/members" replace />} />
         </Route>
       </Routes>

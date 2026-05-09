@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
 import {
-  Users, BookOpen, ShoppingCart, Mail, Shield, LayoutDashboard, CalendarCheck,
+  Users, BookOpen, ShoppingCart, Mail, Shield, LayoutDashboard, CalendarCheck, Image,
 } from 'lucide-react';
 
 const NAV = [
@@ -14,6 +14,7 @@ const NAV = [
   { to: '/books',                label: 'Books',         icon: BookOpen,       roles: ['owner', 'moderator'] },
   { to: '/newsletter',           label: 'Newsletter',    icon: Mail,           roles: ['owner', 'moderator'] },
   { to: '/event-registrations',  label: 'Registrations', icon: CalendarCheck,  roles: ['owner', 'moderator'] },
+  { to: '/media',                label: 'Media',         icon: Image,          roles: ['owner', 'moderator', 'section_editor'] },
   { to: '/admins',               label: 'Admins',        icon: Shield,         roles: ['owner'] },
 ];
 
