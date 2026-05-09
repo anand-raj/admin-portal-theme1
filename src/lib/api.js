@@ -163,13 +163,30 @@ export async function getMedia(token) {
   return handleResponse(res);
 }
 
-export async function presignUpload(token, filename, contentType) {
-  const res = await fetch(`${MEDIA_WORKER_URL}/media/presign`, {
-    method: 'POST',
-    headers: authHeaders(token),
-    body: JSON.stringify({ filename, contentType }),
+export async function uploadMedia(token, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${MEDIA_WORKER_URL}/media/upload`);
+    xhr.setRequestHeader('Authorization', `token ${token}`);
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText)); }
+        catch { reject(new Error('Invalid response from server.')); }
+      } else {
+        try { reject(new Error(JSON.parse(xhr.responseText).error || `Upload failed: HTTP ${xhr.status}`)); }
+        catch { reject(new Error(`Upload failed: HTTP ${xhr.status}`)); }
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload.'));
+    xhr.send(formData);
   });
-  return handleResponse(res);
 }
 
 export async function deleteMedia(token, key) {

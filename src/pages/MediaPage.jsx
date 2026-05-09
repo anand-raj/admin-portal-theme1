@@ -1,16 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../lib/auth';
-import { getMedia, presignUpload, deleteMedia } from '../lib/api';
+import { getMedia, uploadMedia, deleteMedia } from '../lib/api';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Copy, Trash2, Upload, Image as ImageIcon, FileVideo, File } from 'lucide-react';
-
-function formatBytes(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 function FilePreview({ obj }) {
   const ext = obj.key.split('.').pop()?.toLowerCase();
@@ -81,25 +75,8 @@ export default function MediaPage() {
     setUploadProgress({ name: file.name, percent: 0 });
 
     try {
-      // Step 1: get presigned URL from worker
-      const { uploadUrl, publicUrl } = await presignUpload(token, file.name, file.type);
-
-      // Step 2: PUT file directly to R2 using presigned URL
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type);
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setUploadProgress({ name: file.name, percent: Math.round((e.loaded / e.total) * 100) });
-          }
-        };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else reject(new Error(`Upload failed: HTTP ${xhr.status}`));
-        };
-        xhr.onerror = () => reject(new Error('Network error during upload.'));
-        xhr.send(file);
+      await uploadMedia(token, file, (percent) => {
+        setUploadProgress({ name: file.name, percent });
       });
 
       toast.success(`${file.name} uploaded.`);
