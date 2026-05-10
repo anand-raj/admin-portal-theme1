@@ -1,4 +1,4 @@
-import { OAUTH_URL, OAUTH_SITE_ID, WORKER_URL } from '../lib/config';
+import { OAUTH_URL, OAUTH_SITE_ID, ADMIN_WORKER_URL } from '../lib/config';
 import { useAuth } from '../lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,7 +74,7 @@ export default function LoginPage() {
   async function verifyAndLogin(ghToken) {
     try {
       // Verify the token belongs to an admin
-      const res = await fetch(`${WORKER_URL}/admin/members`, {
+      const res = await fetch(`${ADMIN_WORKER_URL}/admin/members`, {
         headers: { Authorization: `token ${ghToken}` },
       });
       if (res.status === 401) {
@@ -93,7 +93,7 @@ export default function LoginPage() {
         fetch('https://api.github.com/user', {
           headers: { Authorization: `token ${ghToken}`, 'User-Agent': 'admin-portal' },
         }),
-        fetch(`${WORKER_URL}/admin/admins`, {
+        fetch(`${ADMIN_WORKER_URL}/admin/admins`, {
           headers: { Authorization: `token ${ghToken}` },
         }),
       ]);
