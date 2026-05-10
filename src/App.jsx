@@ -2,18 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
 import LoginPage from './pages/LoginPage';
 import Layout from './components/Layout';
-import MembersPage from './pages/MembersPage';
-import OrdersPage from './pages/OrdersPage';
-import BooksPage from './pages/BooksPage';
-import NewsletterPage from './pages/NewsletterPage';
 import AdminsPage from './pages/AdminsPage';
-import EventRegistrationsPage from './pages/EventRegistrationsPage';
 import MediaPage from './pages/MediaPage';
 
-// Guard: redirects to /members if the current user's role is not in `allowed`
+// Guard: redirects to /media if the current user's role is not in `allowed`
 function RequireRole({ allowed, children }) {
   const { user } = useAuth();
-  if (!allowed.includes(user?.role)) return <Navigate to="/members" replace />;
+  if (!allowed.includes(user?.role)) return <Navigate to="/media" replace />;
   return children;
 }
 
@@ -24,15 +19,10 @@ function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/members" replace />} />
-          <Route path="members"     element={<MembersPage />} />
-          <Route path="orders"      element={<RequireRole allowed={['owner', 'moderator']}><OrdersPage /></RequireRole>} />
-          <Route path="books"       element={<RequireRole allowed={['owner', 'moderator']}><BooksPage /></RequireRole>} />
-          <Route path="newsletter"  element={<RequireRole allowed={['owner', 'moderator']}><NewsletterPage /></RequireRole>} />
-          <Route path="admins"      element={<RequireRole allowed={['owner']}><AdminsPage /></RequireRole>} />
-          <Route path="event-registrations" element={<RequireRole allowed={['owner', 'moderator']}><EventRegistrationsPage /></RequireRole>} />
-          <Route path="media"        element={<RequireRole allowed={['owner', 'moderator', 'section_editor']}><MediaPage /></RequireRole>} />
-          <Route path="*"           element={<Navigate to="/members" replace />} />
+          <Route index element={<Navigate to="/media" replace />} />
+          <Route path="media"   element={<RequireRole allowed={['owner', 'moderator', 'section_editor']}><MediaPage /></RequireRole>} />
+          <Route path="admins" element={<RequireRole allowed={['owner']}><AdminsPage /></RequireRole>} />
+          <Route path="*"      element={<Navigate to="/media" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
